@@ -2,13 +2,13 @@
 package org.jetbrains.java.decompiler.struct;
 
 import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IResultSaver;
 import org.jetbrains.java.decompiler.struct.lazy.LazyLoader;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
 import org.jetbrains.java.decompiler.util.InterpreterUtil;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,7 +84,9 @@ public class StructContext {
           isArchive = true;
           addArchive(path, file, ContextUnit.TYPE_JAR, isOwn);
         }
-        else if (filename.endsWith(".zip")) {
+        else if (filename.endsWith(".zip")
+              || filename.endsWith(".war")
+              || filename.endsWith(".ear")) {
           isArchive = true;
           addArchive(path, file, ContextUnit.TYPE_ZIP, isOwn);
         }
@@ -149,6 +151,13 @@ public class StructContext {
             classes.put(cl.qualifiedName, cl);
             unit.addClass(cl, name);
             loader.addClassLink(cl.qualifiedName, new LazyLoader.Link(file.getAbsolutePath(), name));
+          } else if (name.endsWith(".jar")
+                  || name.endsWith(".zip")
+                  || name.endsWith(".ear")
+                  || name.endsWith(".war")) {
+            byte[] bytes = InterpreterUtil.getBytes(archive, entry);
+            File f = writeZipEntry(bytes, file.getName() + File.separator + name);
+            addArchive(path, f, ContextUnit.TYPE_ZIP, isOwn);
           }
           else {
             unit.addOtherEntry(file.getAbsolutePath(), name);
@@ -158,6 +167,75 @@ public class StructContext {
           unit.addDirEntry(name);
         }
       }
+    }
+  }
+
+  /*
+   * write zip entry .jar to temp file
+   */
+  private File writeZipEntry(byte[] bytes, String name) {
+    FileOutputStream fos = null;
+    File f = null;
+    try {
+      File tf = File.createTempFile(name, "");
+      String target = tf.getParent() + File.separator + name;
+      f = new File(target);
+      mkDir(f);
+      fos = new FileOutputStream(target);
+      fos.write(bytes);
+      fos.flush();
+      fos.close();
+    } catch (Exception ex) {
+      DecompilerContext.getLogger().writeMessage("Exception RAISED!!! ", ex);
+    } finally {
+      closeQuietly(fos);
+    }
+    return f;
+  }
+
+  private void mkDir(File f) {
+    File dir = new File(f.getParent());
+    if (!dir.exists()) {
+      mkDir(dir);
+    }
+    dir.mkdir();
+  }
+
+  private static final int BUFFER_SIZE = 4096;
+  public static long copy(final InputStream is, final OutputStream os) throws IOException {
+    DecompilerContext.getLogger().writeMessage(
+      "Copying inputStream to outputStream",
+      IFernflowerLogger.Severity.TRACE);
+    final byte[] buffer = new byte[BUFFER_SIZE];
+    long count = 0;
+    int n;
+    while (-1 != (n = is.read(buffer))) {
+      os.write(buffer, 0, n);
+      count += n;
+    }
+    DecompilerContext.getLogger().writeMessage(
+      count + " bytes copied from IS to OS",
+      IFernflowerLogger.Severity.TRACE);
+    return count;
+  }
+
+  public static void closeQuietly(final InputStream is) {
+    try {
+      if (is != null) {
+        is.close();
+      }
+    } catch (IOException ioe) {
+      DecompilerContext.getLogger().writeMessage("Closing InputStream failed.", ioe);
+    }
+  }
+
+  public static void closeQuietly(final OutputStream os) {
+    try {
+      if (os != null) {
+        os.close();
+      }
+    } catch (IOException ioe) {
+      DecompilerContext.getLogger().writeMessage("Closing OutputStream failed.", ioe);
     }
   }
 
