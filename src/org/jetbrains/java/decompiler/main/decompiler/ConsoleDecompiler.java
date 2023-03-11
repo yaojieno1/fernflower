@@ -20,10 +20,14 @@ import java.util.zip.ZipOutputStream;
 public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
   @SuppressWarnings("UseOfSystemOutOrSystemErr")
   public static void main(String[] args) {
-    if (args.length < 2) {
-      System.out.println(
-        "Usage: java -jar fernflower.jar [-<option>=<value>]* [<source>]+ <destination>\n" +
-        "Example: java -jar fernflower.jar -dgs=true c:\\my\\source\\ c:\\my.jar d:\\decompiled\\");
+    // decompile only 1 source file
+    // delete destination paramter, set it to default value: [source].src/
+    // usage: java -jar fernflower.jar d:\project\xxx.jar
+    // will be decompile to d:\project\xxx.jar.src\
+    //
+    //if (args.length < 2) {
+    if (args.length < 1) {
+      printHelp();
       return;
     }
 
@@ -32,27 +36,27 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
     List<File> libraries = new ArrayList<>();
 
     boolean isOption = true;
-    for (int i = 0; i < args.length - 1; ++i) { // last parameter - destination
-      String arg = args[i];
-
+    for (String arg : args) {
       if (isOption && arg.length() > 5 && arg.charAt(0) == '-' && arg.charAt(4) == '=') {
         String value = arg.substring(5);
         if ("true".equalsIgnoreCase(value)) {
           value = "1";
-        }
-        else if ("false".equalsIgnoreCase(value)) {
+        } else if ("false".equalsIgnoreCase(value)) {
           value = "0";
         }
 
         mapOptions.put(arg.substring(1, 4), value);
-      }
-      else {
+      } else if (isOption
+        && (arg.equalsIgnoreCase("-h")
+        || (arg.equalsIgnoreCase("--help")))) {
+        printHelp();
+        return;
+      } else {
         isOption = false;
 
         if (arg.startsWith("-e=")) {
           addPath(libraries, arg.substring(3));
-        }
-        else {
+        } else {
           addPath(sources, arg);
         }
       }
@@ -63,9 +67,13 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
       return;
     }
 
-    File destination = new File(args[args.length - 1]);
+    File destination = new File(sources.get(0).getParent());
+    if (!destination.exists()) {
+      destination.mkdir();
+    }
+
     if (!destination.isDirectory()) {
-      System.out.println("error: destination '" + destination + "' is not a directory");
+      System.out.println("error: destination '" + destination + "'is a directory");
       return;
     }
 
@@ -80,6 +88,18 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
     }
 
     decompiler.decompileContext();
+  }
+
+  private static void printHelp() {
+    System.out.println(
+      """
+
+        Usage: java -jar fernflower.jar [-<option>=<value>]* [<source>]
+
+        Example: java -jar fernflower.jar -dgs=true d:\\project\\xxx.jar
+        
+        will be decompile to d:\\project\\xxx.jar.src\\
+        """);
   }
 
   @SuppressWarnings("UseOfSystemOutOrSystemErr")
