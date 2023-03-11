@@ -8,6 +8,7 @@ import org.jetbrains.java.decompiler.main.DecompilerContext;
 import org.jetbrains.java.decompiler.main.collectors.BytecodeMappingTracer;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerLogger;
 import org.jetbrains.java.decompiler.main.extern.IFernflowerPreferences;
+import org.jetbrains.java.decompiler.main.rels.ClassWrapper;
 import org.jetbrains.java.decompiler.modules.decompiler.ExprProcessor;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.CheckTypesResult;
 import org.jetbrains.java.decompiler.modules.decompiler.vars.VarVersionPair;
@@ -192,8 +193,12 @@ public class NewExprent extends Exprent {
 
       if (!lambda && constructor != null) {
         List<Exprent> parameters = constructor.getParameters();
-        List<VarVersionPair> mask = child.getWrapper().getMethodWrapper(CodeConstants.INIT_NAME, constructor.getStringDescriptor()).synthParameters;
-        if (mask == null) {
+        List<VarVersionPair> mask = null;
+        ClassWrapper cw = child.getWrapper();
+        if (cw != null) {
+          mask = cw.getMethodWrapper(CodeConstants.INIT_NAME, constructor.getStringDescriptor()).synthParameters;
+        }
+        if (cw == null || mask == null) {
           InvocationExprent superCall = child.superInvocation;
           mask = ExprUtil.getSyntheticParametersMask(superCall.getClassName(), superCall.getStringDescriptor(), parameters.size());
         }
