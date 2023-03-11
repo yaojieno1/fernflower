@@ -8,6 +8,7 @@ import org.jetbrains.java.decompiler.struct.lazy.LazyLoader;
 import org.jetbrains.java.decompiler.struct.lazy.LazyLoader.Link;
 import org.jetbrains.java.decompiler.util.DataInputFullStream;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -109,19 +110,23 @@ public class ContextUnit {
         }
       }
       case TYPE_JAR, TYPE_ZIP -> {
+        String DestinationSourceDir = archivePath + File.separator + filename + ".src";
         // create archive file
         resultSaver.saveFolder(archivePath);
-        resultSaver.createArchive(archivePath, filename, manifest);
+        // resultSaver.createArchive(archivePath, filename, manifest);
+        resultSaver.saveFolder(DestinationSourceDir);
 
         // directory entries
         for (String dirEntry : dirEntries) {
-          resultSaver.saveDirEntry(archivePath, filename, dirEntry);
+          // resultSaver.saveDirEntry(archivePath, filename, dirEntry);
+          resultSaver.saveFolder(DestinationSourceDir + File.separator + dirEntry);
         }
 
         // non-class entries
         for (String[] pair : otherEntries) {
           if (type != TYPE_JAR || !JarFile.MANIFEST_NAME.equalsIgnoreCase(pair[1])) {
-            resultSaver.copyEntry(pair[0], archivePath, filename, pair[1]);
+            // resultSaver.copyEntry(pair[0], archivePath, filename, pair[1]);
+            resultSaver.copyFile(pair[0], DestinationSourceDir, pair[1]);
           }
         }
 
@@ -131,7 +136,20 @@ public class ContextUnit {
           String entryName = decompiledData.getClassEntryName(cl, classEntries.get(i));
           if (entryName != null) {
             String content = decompiledData.getClassContent(cl);
-            resultSaver.saveClassEntry(archivePath, filename, cl.qualifiedName, entryName, content);
+
+            // resultSaver.saveClassEntry(archivePath, filename, cl.qualifiedName, entryName, content);
+            if (content != null && content.length() > 0) {
+              int[] mapping = null;
+              if (DecompilerContext.getOption(IFernflowerPreferences.BYTECODE_SOURCE_MAPPING)) {
+                mapping = DecompilerContext.getBytecodeSourceMapper().getOriginalLinesMapping();
+              }
+
+              resultSaver.saveClassFile(DestinationSourceDir,
+                cl.qualifiedName,
+                entryName,
+                content,
+                mapping);
+            }
           }
         }
 

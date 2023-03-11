@@ -263,7 +263,8 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
     String file = new File(getAbsolutePath(path), archiveName).getPath();
     try {
       mapArchiveEntries.remove(file);
-      mapArchiveStreams.remove(file).close();
+      OutputStream o = mapArchiveStreams.remove(file);
+      if (o != null) o.close();
     }
     catch (IOException ex) {
       DecompilerContext.getLogger().writeMessage("Cannot close " + file, IFernflowerLogger.Severity.WARN);
