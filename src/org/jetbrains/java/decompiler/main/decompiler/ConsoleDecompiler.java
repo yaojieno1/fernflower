@@ -67,14 +67,9 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
       return;
     }
 
-    File destination = new File(sources.get(0).getParent());
-    if (!destination.exists()) {
-      destination.mkdir();
-    }
-
+    File destination = sources.get(0);
     if (!destination.isDirectory()) {
-      System.out.println("error: destination '" + destination + "'is a directory");
-      return;
+      destination = new File(destination.getParent());
     }
 
     PrintStreamLogger logger = new PrintStreamLogger(System.out);
@@ -97,8 +92,10 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
         Usage: java -jar fernflower.jar [-<option>=<value>]* [<source>]
 
         Example: java -jar fernflower.jar -dgs=true d:\\project\\xxx.jar
-        
         will be decompile to d:\\project\\xxx.jar.src\\
+        
+        Example: java -jar fernflower2.jar d:\\project
+        will be decompile all .jar/.war/.ear/.class inside d:\\project
         """);
   }
 
