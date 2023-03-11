@@ -200,7 +200,8 @@ public class NewExprent extends Exprent {
         }
         if (cw == null || mask == null) {
           InvocationExprent superCall = child.superInvocation;
-          mask = ExprUtil.getSyntheticParametersMask(superCall.getClassName(), superCall.getStringDescriptor(), parameters.size());
+          if (superCall != null)
+            mask = ExprUtil.getSyntheticParametersMask(superCall.getClassName(), superCall.getStringDescriptor(), parameters.size());
         }
 
         int start = enumConst ? 2 : 0;
