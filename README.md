@@ -83,3 +83,37 @@ pass a class that implements org.jetbrains.java.decompiler.main.extern.IIdentifi
 
 The meaning of each method should be clear from naming: toBeRenamed determine whether the element will be renamed, while the other three
 provide new names for classes, methods and fields respectively.  
+
+--------------
+## Changes of this Repository 本仓库的修改点
+
+- remove zip file output, use directory output instead  
+- 不支持 zip 文件输出，强制使用目录输出  
+- remove destionation parameter, use "sourcefile + .src" directory as output directory
+- 入参中删除 destination。默认将 destination输出目录设置为 "源文件 + .src/" 目录
+- support fatjar decompile such as spring-boot like, including jar\ear\war\zip and etc
+- 支持 springboot-like 的 fatjar 包，包括 jar\ear\war\zip 等
+- resolve some null pointer problems of fernflower
+- 解决了 fernflower 的几个空指针问题
+
+## How to Build
+
+```cmd
+gradle build -x test
+```
+
+## Usage 使用方法 
+
+`Need JDK 17+`
+
+```cmd
+java -jar fernflower2.jar [-<option>=<value>]* [<source>]+
+```
+
+\* means 0 or more times\
+\+ means 1 or more times
+
+\<source>: file or directory with files to be decompiled. Directories are recursively scanned. Allowed file extensions are class, zip and jar.
+Sources prefixed with -e= mean "library" files that won't be decompiled, but taken into account when analysing relationships between
+classes or methods. Especially renaming of identifiers (s. option 'ren') can benefit from information about external classes.          
+
