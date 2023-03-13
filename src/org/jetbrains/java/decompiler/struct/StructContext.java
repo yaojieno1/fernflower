@@ -157,7 +157,13 @@ public class StructContext {
                   || name.endsWith(".war")) {
             byte[] bytes = InterpreterUtil.getBytes(archive, entry);
             File f = writeZipEntry(bytes, file.getName() + File.separator + name);
-            addArchive(path + File.separator + file.getName() + ".src", f, ContextUnit.TYPE_ZIP, isOwn);
+
+            if (name.indexOf('/') >= 0) {
+              addArchive(path + File.separator + file.getName() + ".src" + File.separator + name.substring(0, name.lastIndexOf("/")), f, ContextUnit.TYPE_ZIP, isOwn);
+            } else {
+              addArchive(path + File.separator + file.getName() + ".src" + File.separator + name, f, ContextUnit.TYPE_ZIP, isOwn);
+            }
+            f.deleteOnExit();
           }
           else {
             unit.addOtherEntry(file.getAbsolutePath(), name);

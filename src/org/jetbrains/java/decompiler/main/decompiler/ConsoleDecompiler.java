@@ -75,6 +75,8 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
     PrintStreamLogger logger = new PrintStreamLogger(System.out);
     ConsoleDecompiler decompiler = new ConsoleDecompiler(destination, mapOptions, logger);
 
+    System.out.println("Preparing ... ");
+
     for (File library : libraries) {
       decompiler.addLibrary(library);
     }
@@ -165,7 +167,12 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
   // *******************************************************************
 
   private String getAbsolutePath(String path) {
-    return new File(root, path).getAbsolutePath();
+    String aPath = new File(root, path).getAbsolutePath();
+    File aFile = new File(aPath);
+    if (!aFile.exists()) {
+      aFile.mkdirs();
+    }
+    return aPath;
   }
 
   @Override
@@ -189,6 +196,7 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
   @Override
   public void saveClassFile(String path, String qualifiedName, String entryName, String content, int[] mapping) {
     File file = new File(getAbsolutePath(path), entryName);
+    new File(file.getParent()).mkdirs();
     try (Writer out = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
       out.write(content);
     }
@@ -239,6 +247,27 @@ public class ConsoleDecompiler implements IBytecodeProvider, IResultSaver {
     }
     catch (IOException ex) {
       String message = "Cannot copy entry " + entryName + " from " + source + " to " + file;
+      DecompilerContext.getLogger().writeMessage(message, ex);
+    }
+  }
+
+
+  public void copyEntry2File(String source, String path, String archiveName, String entryName) {
+    String file = new File(getAbsolutePath(path), archiveName).getPath();
+
+    try (ZipFile srcArchive = new ZipFile(new File(source))) {
+      ZipEntry entry = srcArchive.getEntry(entryName);
+      if (entry != null) {
+        try (InputStream in = srcArchive.getInputStream(entry)) {
+          File target = new File(file + File.separator + entryName);
+          new File(target.getParent()).mkdirs();
+          FileOutputStream out = new FileOutputStream(target);
+          InterpreterUtil.copyStream(in, out);
+        }
+      }
+    }
+    catch (IOException ex) {
+      String message = "Cannot copy entry " + entryName + " from " + source + " to file" + path + File.separator + entryName;
       DecompilerContext.getLogger().writeMessage(message, ex);
     }
   }

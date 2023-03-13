@@ -111,6 +111,7 @@ public class ContextUnit {
       }
       case TYPE_JAR, TYPE_ZIP -> {
         String DestinationSourceDir = archivePath + File.separator + filename + ".src";
+        System.out.println("Processing: " + DestinationSourceDir);
         // create archive file
         resultSaver.saveFolder(archivePath);
         // resultSaver.createArchive(archivePath, filename, manifest);
@@ -126,7 +127,7 @@ public class ContextUnit {
         for (String[] pair : otherEntries) {
           if (type != TYPE_JAR || !JarFile.MANIFEST_NAME.equalsIgnoreCase(pair[1])) {
             // resultSaver.copyEntry(pair[0], archivePath, filename, pair[1]);
-            resultSaver.copyFile(pair[0], DestinationSourceDir, pair[1]);
+            resultSaver.copyEntry2File(pair[0], archivePath, filename + ".src", pair[1]);
           }
         }
 
@@ -153,7 +154,7 @@ public class ContextUnit {
           }
         }
 
-        resultSaver.closeArchive(archivePath, filename);
+//        resultSaver.closeArchive(archivePath, filename);
       }
     }
   }

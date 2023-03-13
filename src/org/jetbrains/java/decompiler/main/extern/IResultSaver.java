@@ -16,6 +16,8 @@ public interface IResultSaver {
 
   void copyEntry(String source, String path, String archiveName, String entry);
 
+  void copyEntry2File(String source, String path, String archiveName, String entryName);
+
   void saveClassEntry(String path, String archiveName, String qualifiedName, String entryName, String content);
 
   void closeArchive(String path, String archiveName);

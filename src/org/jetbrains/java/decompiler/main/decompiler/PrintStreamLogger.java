@@ -34,7 +34,7 @@ public class PrintStreamLogger extends IFernflowerLogger {
   @Override
   public void startReadingClass(String className) {
     if (accepts(Severity.INFO)) {
-      writeMessage("Decompiling class " + className, Severity.INFO);
+      // writeMessage("Decompiling class " + className, Severity.INFO);
       ++indent;
     }
   }
@@ -43,7 +43,7 @@ public class PrintStreamLogger extends IFernflowerLogger {
   public void endReadingClass() {
     if (accepts(Severity.INFO)) {
       --indent;
-      writeMessage("... done", Severity.INFO);
+      // writeMessage("... done", Severity.INFO);
     }
   }
 
