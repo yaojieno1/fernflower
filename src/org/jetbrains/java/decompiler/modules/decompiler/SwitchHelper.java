@@ -7,6 +7,7 @@ import org.jetbrains.java.decompiler.ClassNameConstants;
 import org.jetbrains.java.decompiler.code.CodeConstants;
 import org.jetbrains.java.decompiler.main.ClassesProcessor;
 import org.jetbrains.java.decompiler.main.DecompilerContext;
+import org.jetbrains.java.decompiler.main.rels.ClassWrapper;
 import org.jetbrains.java.decompiler.main.rels.MethodWrapper;
 import org.jetbrains.java.decompiler.modules.decompiler.StatEdge.EdgeType;
 import org.jetbrains.java.decompiler.modules.decompiler.exps.*;
@@ -89,7 +90,9 @@ public final class SwitchHelper {
       FieldExprent arrayField = (FieldExprent)array.getArray();
       ClassesProcessor.ClassNode classNode = DecompilerContext.getClassProcessor().getMapRootClasses().get(arrayField.getClassname());
       if (classNode == null) return mapping;
-      MethodWrapper wrapper = classNode.getWrapper().getMethodWrapper(CodeConstants.CLINIT_NAME, "()V");
+      ClassWrapper cw = classNode.getWrapper();
+      if (cw == null) return mapping;
+      MethodWrapper wrapper = cw.getMethodWrapper(CodeConstants.CLINIT_NAME, "()V");
       if (wrapper != null && wrapper.root != null) {
         wrapper.getOrBuildGraph().iterateExprents(exprent -> {
           if (exprent instanceof AssignmentExprent assignment) {
@@ -265,6 +268,7 @@ public final class SwitchHelper {
       @Override
       public SwitchOnStringCandidate recognize(@NotNull SwitchStatement firstSwitch,
                                                @NotNull InvocationExprent switchSelector) {
+        if (switchSelector.getInstance() == null) return null;
         if (switchSelector.getInstance().type != Exprent.EXPRENT_VAR) return null;
         if (!switchSelector.isInstanceCall(ClassNameConstants.JAVA_LANG_STRING, "hashCode", 0)) return null;
 
