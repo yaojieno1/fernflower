@@ -104,6 +104,7 @@ public class TypeAnnotation {
   }
 
   public boolean isWrittenBeforeType(Type type) {
+    if (type == null) return false;
     StructTypePathEntry pathEntry = getPaths().stream().findFirst().orElse(null);
     if (pathEntry == null && type.getArrayDim() == 0) {
       return type.isAnnotatable();
